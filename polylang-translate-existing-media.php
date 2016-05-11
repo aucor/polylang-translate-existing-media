@@ -96,7 +96,7 @@ class PolylangTranslateExistingMedia {
 
 				if($the_content !== $altered_content) {
 
-					// update with wpdb to avoid revisions and changes to modiefied dates etc
+					// update with wpdb to avoid revisions and changes to modified dates etc
 
 					$wpdb->update(
 						$wpdb->posts,
@@ -141,11 +141,10 @@ class PolylangTranslateExistingMedia {
 					// @TODO: create API for these fields (like filter to give all meta_keys for those fields)
 					if( mb_strpos($value[0], '<img ') !== false || mb_strpos($value[0], '[gallery ') !== false ) {
 
-						$value_altered = $this->replace_media_in_content($value[0], $query->post);
+						$value_altered = $this->replace_media_in_content($value[0], $query->post, $lang_slug);
 
 						// update if there are changes
 						if($value[0] !== $value_altered) {
-							$this->updated = $this->updated + 1;
 							update_post_meta( $query->post->ID, $key, $value_altered, $value[0] );
 							$this_post_was_updated = true;
 						}
@@ -469,40 +468,6 @@ class PolylangTranslateExistingMedia {
 			}
 			set_post_thumbnail( $post, $post_thumbnail_id );
 		}
-	}
-
-	/**
-	 * Copy all attached media
-	 *
-	 * Media is translated already from content and featured image but there might be more
-	 *
-	 * @param obj post new post object
-	 * @param int ID of the post we copy from
-	 * @param string slug of the new translation language
-	 *
-	 */
-
-	function copy_attached_media($post, $from_post_id, $new_lang_slug) {
-
-		if(PLL()->model->options['media_support']) {
-
-			$from_lang = pll_get_post_language($from_post_id, 'slug');
-				$args = array( 
-					'post_type' => 'attachment',
-					'posts_per_page' => -1,
-					'no_found_rows' => true,
-					'parent' => $from_post_id,
-					'post_status' => null,
-					'lang' => $from_lang,
-				);
-				$attachments = new WP_Query( $args );
-			while ( $attachments->have_posts() ) : $attachments->the_post();
-				// attachments are translated only once so don't worry about this
-				translate_attachment(get_the_ID(), $new_lang_slug, $post->ID);
-			endwhile;
-			wp_reset_query();
-		}
-
 	}
 
 	/**
