@@ -141,7 +141,7 @@ class PolylangTranslateExistingMedia {
 					// @TODO: create API for these fields (like filter to give all meta_keys for those fields)
 					if( mb_strpos($value[0], '<img ') !== false || mb_strpos($value[0], '[gallery ') !== false ) {
 
-						$value_altered = $this->replace_media_in_content($value[0], $query->post, $lang_slug);
+						$value_altered = $this->replace_media_in_content($value[0], $lang_slug, $query->post->ID);
 
 						// update if there are changes
 						if($value[0] !== $value_altered) {
