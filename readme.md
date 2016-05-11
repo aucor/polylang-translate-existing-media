@@ -13,19 +13,17 @@ Polylang Translate existing media is an add-on for the multilingual WordPress pl
 
 Basic feature list:
 
- * Copy title, content and attachments for new translation
- * Choose the language you want to copy from (make translation from the translated version's editor)
- * Get useful translation markup for captions and title like (es translation) to be overwritten
- * Media translation works for images, captions, galleries and featured image (if you use media translations)
- * Use various filters to modify copied content in code (to be documented and expanded)
- * Translations are done with Polylang's functions, no messing around
+ * Translate all media (images and galleries) that are inside content, meta fields and featured image
+ * Takes care all post types (that are not 'attachment', 'revision', 'acf-field', 'acf-field-group', 'nav_menu_item', 'polylang_mo')
+ * Image translations are linked automatically
+ * Uses Polylang's functions, no messing around
 
 **The plugin is still in test phase and I'd like to get feedback and tackle possible issues. Please, report issues and contribute!**
 
 
 ## Installation
 
-Basic feature list:
+How-to use:
 
  * Take a backup of your database
  * Download plugin and activate (you will need Polylang active)
