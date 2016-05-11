@@ -84,10 +84,11 @@ class PolylangTranslateExistingMedia {
 
 			$query = new WP_Query( $args );
 			$max_num_pages = $query->max_num_pages;
-			$lang_slug = pll_get_post_language($query->post->ID);
+			
 
 			while ( $query->have_posts() ) : $query->the_post();
 
+				$lang_slug = pll_get_post_language($query->post->ID);
 				$this_post_was_updated = false;
 
 				// deal with content
