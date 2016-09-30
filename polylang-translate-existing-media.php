@@ -2,7 +2,7 @@
 /*
 Plugin Name: Polylang Add-on: Translate existing media
 Plugin URI: 
-Version: 0.1.0
+Version: 0.1.1
 Author: Aucor Oy
 Author URI: https://github.com/aucor
 Description: Translate and replace media in existing posts, pages and cpts

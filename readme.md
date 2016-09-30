@@ -33,6 +33,23 @@ How-to use:
  * Click through steps (50 posts at a time). Each step will take some time.
  * Deactivate and delete plugin when you have gone through all the steps
 
+**Composer:**
+```
+$ composer aucor/polylang-translate-existing-media
+```
+**With composer.json:**
+```
+{
+  "require": {
+    "aucor/polylang-translate-existing-media": "*"
+  },
+  "extra": {
+    "installer-paths": {
+      "htdocs/wp-content/plugins/{$name}/": ["type:wordpress-plugin"]
+    }
+  }
+}
+```
 
 ## Issues and feature whishlist
 
@@ -43,8 +60,3 @@ How-to use:
  **Feature whishlist:**
 
  * Create API / Filter to translate meta fields (like ACF image fields) where image is saved as ID
-
-## Changelog
-
-### 0.1.0 - Github launch
- * It's working
