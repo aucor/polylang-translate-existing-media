@@ -1,0 +1,13 @@
+{
+	"name": "aucor/polylang-translate-existing-media",
+	"description": "Bulk translate and replace all existing media in content, featured image and meta fields when you enable translations in media with Polylang.",
+	"license": "GPLv2 or later",
+	"type": "wordpress-plugin",
+	"homepage": "https://github.com/aucor/polylang-translate-existing-media",
+	"authors": [
+		{
+			"name": "Teemu Suoranta",
+			"email": "teemu@aucor.fi"
+		}
+	]
+}
