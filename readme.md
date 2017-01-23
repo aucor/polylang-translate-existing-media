@@ -23,7 +23,7 @@ Basic feature list:
  * Translate all media (images and galleries) that are inside content, meta fields and featured image
  * Takes care all post types (that are not 'attachment', 'revision', 'acf-field', 'acf-field-group', 'nav_menu_item', 'polylang_mo')
  * Image translations are linked automatically
- * You can add your own
+ * You can add your own custom fields that have image IDs
  * Uses Polylang's functions, no messing around
 
 **This is open source and I cannot give you any guarantees, though it has worked for me in many projects. Please, report issues and contribute!**
@@ -86,7 +86,6 @@ add_filter( 'polylang-translate-existing-media-custom-fields-with-image-id', 'pr
  **To-do:**
 
  * Include terms and their custom fields
- * Add screenshot
  * Replacing count might be off, make it more informative
 
 ## Changelog
