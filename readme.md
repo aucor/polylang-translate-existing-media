@@ -51,12 +51,40 @@ $ composer aucor/polylang-translate-existing-media
 }
 ```
 
+## Filters
+
+**Add your own custom fields that have images saved as IDs:**
+
+```
+function prefix_custom_fields_to_translate($custom_fields) {
+	// return keys of your custom fields with image id
+  return array(
+    'my_custom_image_field',
+    'other_custom_image_field'
+  );
+}
+add_filter( 'polylang-translate-existing-media-custom-fields-with-image-id', 'prefix_custom_fields_to_translate' );
+```
+
+
 ## Issues and feature whishlist
 
 **Issues:**
 
 (No known issues, yet)
 
- **Feature whishlist:**
+ **To-do:**
 
- * Create API / Filter to translate meta fields (like ACF image fields) where image is saved as ID
+ * Include terms and their custom fields
+ * Add screenshot
+ * Replacing count might be off, make it more informative
+
+## Changelog
+
+### 0.2
+
+ * New Feature: Translate whole media library
+ * New Feature: API for custom_fields that save the image as ID
+ * New Feature: Add filter to excluded post types `polylang-translate-existing-media-skip-post-types`
+ * Improvement: Include all post_status
+ * Bugfix: Don't copy featured image, just translate the existing one

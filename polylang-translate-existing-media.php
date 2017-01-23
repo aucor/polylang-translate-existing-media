@@ -2,7 +2,7 @@
 /*
 Plugin Name: Polylang Add-on: Translate existing media
 Plugin URI: 
-Version: 0.1.1
+Version: 0.2.0
 Author: Aucor Oy
 Author URI: https://github.com/aucor
 Description: Translate and replace media in existing posts, pages and cpts
@@ -19,6 +19,7 @@ class PolylangTranslateExistingMedia {
 	private $images_translated;
 	private $ignored;
 	private $admin_notice;
+	private $custom_fields;
 
 	/**
 	 * Constructor
@@ -46,22 +47,90 @@ class PolylangTranslateExistingMedia {
 	}
 
 	/**
-	 * 
+	 * Main
 	 */
 
 	function translate_existing_media() {
+
+		// include custom fields that have images saved as IDs
+		$this->custom_fields = apply_filters('polylang-translate-existing-media-custom-fields-with-image-id', array());
+
 		if(!PLL()->model->options['media_support']) {
 
 			$this->admin_notice = 'Enable media support to start. Remember to then "set all content to default language"';
 
+		} elseif( isset($_GET["polylang-translate-existing-media-library"]) ) {
+
+			// translate whole media library
+
+			$paged = ($_GET["polylang-translate-existing-media-library-p"]) ? $_GET["polylang-translate-existing-media-library-p"] : 1; // Paged because running too many posts at a time causes memory overflow
+
+			$args = array( 
+				'post_type' => 'attachment',
+				'posts_per_page' => 50, // Make me less if PHP can't handle it
+				'paged' => $paged,
+				'orderby' => 'title',
+				'order' => 'DESC',
+				'post_status' => true,
+				'lang' => pll_default_language(), // Assumes you did set all content to default language as instructed, if not, there's nothing to query
+			);
+
+			$attachment_query = new WP_Query( $args );
+			$max_num_pages = $attachment_query->max_num_pages;
+			$languages = pll_languages_list();
+
+			// remove default language from language list
+			if(($key = array_search(pll_default_language(), $languages)) !== false) {
+				unset($languages[$key]);
+			}
+			
+			while ( $attachment_query->have_posts() ) : $attachment_query->the_post();
+
+				$lang_slug = pll_default_language();
+				$post_parent = wp_get_post_parent_id($attachment_query->post->ID);
+
+				// Go through all languages (except the default language)
+				foreach ($languages as $new_lang) {
+
+					$post_parent_new = ($post_parent !== 0) ? pll_get_post($post_parent, $new_lang) : 0; // Translate post parent
+					$translated_attachment_id = $this->translate_attachment($attachment_query->post->ID, $new_lang, $post_parent_new);
+
+					if($translated_attachment_id !== $attachment_query->post->ID) {
+						$this->updated++;
+					}
+
+				}
+
+			endwhile;
+			wp_reset_query();
+
+			
+			$this->admin_notice = $this->updated . ' attachment translations created';
+			$next_page = ($paged < $max_num_pages) ? $paged + 1 : null;
+
+			if(!empty($next_page)) {
+				$full_url = "//$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+				$full_url = str_replace('polylang-translate-existing-media-library-p=' . $paged, 'polylang-translate-existing-media-library-p=' . $next_page, $full_url);
+				$this->admin_notice .= '<a class="button" style="margin:-.15rem 0 .25rem .25rem" href="' . $full_url . '">Continue media library translation (step ' . $next_page . ' / ' . $max_num_pages . ')</a>';
+			} else {
+
+				$full_url = "//$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+				$full_url = str_replace('polylang-translate-existing-media-library=start&polylang-translate-existing-media-library-p=' . $paged, '', $full_url);
+				$full_url .= (strpos($full_url, '?') === false) ? '?' : '&';
+				$replace_full_url = $full_url . 'polylang-translate-existing-media=start&polylang-translate-existing-media-p=1';
+
+				$this->admin_notice .= '<br /><br />Done! Media library is translated. Next, replace all existing images from content. <a class="button" style="margin:-.15rem 0 .25rem 0" href="' . $replace_full_url . '">2. Translate existing images in content</a>';
+			}
+
+
 		} elseif( isset($_GET["polylang-translate-existing-media"]) ) {
 
-			// let's do this
+			// replace in existing content
 
 			global $wpdb;
 
 			$post_types = get_post_types();
-			$skip_post_types = array('attachment', 'revision', 'acf-field', 'acf-field-group', 'nav_menu_item', 'polylang_mo');
+			$skip_post_types = apply_filters( 'polylang-translate-existing-media-skip-post-types', array('attachment', 'revision', 'acf-field', 'acf-field-group', 'nav_menu_item', 'polylang_mo' ));
 			$post_types = array_diff($post_types, $skip_post_types);
 
 			// remove non translated post types from the mix
@@ -79,6 +148,7 @@ class PolylangTranslateExistingMedia {
 				'paged' => $paged,
 				'orderby' => 'title',
 				'order' => 'DESC',
+				'post_status' => true,
 				'lang' => ''
 			);
 
@@ -94,6 +164,17 @@ class PolylangTranslateExistingMedia {
 				// deal with content
 				$the_content = get_the_content();
 				$altered_content = $this->replace_media_in_content($the_content, $query->post, $lang_slug);
+
+				// deal with custom fields
+				foreach ($this->custom_fields as $custom_field) {
+					$updated_custom_field = $this->replace_media_in_custom_field_with_image_id($custom_field, $query->post, $lang_slug);
+
+					if($this_post_was_updated !== true && $updated_custom_field === true) {
+						$this_post_was_updated = true;
+					}
+
+				}
+		
 
 				if($the_content !== $altered_content) {
 
@@ -139,7 +220,6 @@ class PolylangTranslateExistingMedia {
 					}
 
 					// if you have pure image ID meta fields, this won't work
-					// @TODO: create API for these fields (like filter to give all meta_keys for those fields)
 					if( mb_strpos($value[0], '<img ') !== false || mb_strpos($value[0], '[gallery ') !== false ) {
 
 						$value_altered = $this->replace_media_in_content($value[0], $query->post, $lang_slug);
@@ -179,19 +259,26 @@ class PolylangTranslateExistingMedia {
 			if(!empty($next_page)) {
 				$full_url = "//$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
 				$full_url = str_replace('polylang-translate-existing-media-p=' . $paged, 'polylang-translate-existing-media-p=' . $next_page, $full_url);
-				$this->admin_notice .= '<a class="button" style="margin:-.15rem 0 .25rem .25rem" href="' . $full_url . '">Continue (step ' . $next_page . ' / ' . $max_num_pages . ')</a>';
+				$this->admin_notice .= '<a class="button" style="margin:-.15rem 0 .25rem .25rem" href="' . $full_url . '">Continue replacing existing images in content (step ' . $next_page . ' / ' . $max_num_pages . ')</a>';
 			} else {
-				$this->admin_notice .= '<br /><br />Done! You can (and should) deactivate me now!';
+				$this->admin_notice .= '<br /><br />Done! You can (and should) deactivate this plugin now!';
 			}
 
 		} else {
 
 			$full_url = "//$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
-			
 			$full_url .= (strpos($full_url, '?') === false) ? '?' : '&';
-			$full_url .= 'polylang-translate-existing-media=start&polylang-translate-existing-media-p=1';
+
+			$replace_full_url = $full_url . 'polylang-translate-existing-media=start&polylang-translate-existing-media-p=1';
+			$translate_full_url = $full_url . 'polylang-translate-existing-media-library=start&polylang-translate-existing-media-library-p=1';
 			
-			$this->admin_notice = 'Start bulk translating. Remember to first set all content without language to default language from Languages. <b>Take a backup for your database!</b> There is no return. <a class="button" style="margin:-.15rem 0 .25rem .25rem" href="' . $full_url . '">Translate and replace</a>';
+			$this->admin_notice = 'Start bulk translating. Remember to first set all content without language to default language from Languages. <b>Take a backup for your database!</b> There is no return. ';
+
+			if(!empty($this->custom_fields)) {
+				$this->admin_notice .= '<br /><br />You have added following custom fields that have image IDs: <span style="display:block;background: #f1f1f1;padding:.5rem;margin-bottom:1rem;">' . esc_attr( implode(', ', $this->custom_fields)) . '</span>';
+			}
+
+			$this->admin_notice .= '<a class="button" style="margin:-.15rem .5rem .25rem 0" href="' . $translate_full_url . '">1. Translate the whole media library</a><a class="button" style="margin:-.15rem 0 .25rem 0" href="' . $replace_full_url . '">2. Translate existing images in content</a>';
 
 		}
 	}
@@ -454,7 +541,7 @@ class PolylangTranslateExistingMedia {
 
 
 	/**
-	 * Copy featured image
+	 * Translate featured image
 	 *
 	 * @param obj post new post object
 	 * @param int ID of the post we copy from
@@ -462,13 +549,48 @@ class PolylangTranslateExistingMedia {
 	 */
 
 	function copy_featured_image($post, $from_post_id, $new_lang_slug) {
-		if(has_post_thumbnail( $from_post_id )) {
-			$post_thumbnail_id = get_post_thumbnail_id( $from_post_id );
-			if(PLL()->model->options['media_support']) {
-				$post_thumbnail_id = $this->translate_attachment($post_thumbnail_id, $new_lang_slug, $post->ID);
-			}
+		if(has_post_thumbnail( $post->ID )) {
+			$post_thumbnail_id = get_post_thumbnail_id( $post->ID );
+			$post_thumbnail_id = $this->translate_attachment($post_thumbnail_id, $new_lang_slug, $post->ID);
 			set_post_thumbnail( $post, $post_thumbnail_id );
 		}
+	}
+
+	/**
+	 * Replace media in custom fields with image ID
+	 *
+	 * These custom fields are given with filter and not found automatically.
+	 *
+	 * @param string custom field key
+	 * @param object post
+	 * @param string slug of the new translation language
+	 */
+
+	function replace_media_in_custom_field_with_image_id($custom_field, $post_object, $new_lang) {
+		
+		$did_translate_something = false;
+
+		if(empty($custom_field)) {
+			return false;
+		}
+
+		$custom_field_values = get_post_meta($post_object->ID, $custom_field, false);
+
+		if(empty($custom_field_values)) {
+			return false;
+		}
+
+		foreach ($custom_field_values as $custom_field_value) {
+			$translated_value = $this->translate_attachment($custom_field_value, $new_lang, $post_object->ID);
+			if($custom_field_value == $translated_value) {
+				continue; // it was correct already
+			}
+			update_post_meta($post_object->ID, $custom_field, $translated_value, $custom_field_value);
+			$did_translate_something = true;
+		}
+
+		return $did_translate_something;
+
 	}
 
 	/**
