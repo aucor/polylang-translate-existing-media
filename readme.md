@@ -10,26 +10,34 @@
 
 Polylang Translate existing media is an add-on for the multilingual WordPress plugin [Polylang](https://wordpress.org/plugins/polylang/). This add-on let's you bulk translate and replace all existing media in content, featured image and meta fields you enable translations in media. This plugin is based on my other Polylang plugin [polylang-copy-content](https://github.com/aucor/polylang-copy-content).
 
+When to use:
+
+ * When turning existing site to multi-lingual
+ * When enabling media translations when you already have media uploaded and added to content
+
 
 Basic feature list:
 
  * Translate all media (images and galleries) that are inside content, meta fields and featured image
  * Takes care all post types (that are not 'attachment', 'revision', 'acf-field', 'acf-field-group', 'nav_menu_item', 'polylang_mo')
  * Image translations are linked automatically
+ * You can add your own
  * Uses Polylang's functions, no messing around
 
-**The plugin is still in test phase and I'd like to get feedback and tackle possible issues. Please, report issues and contribute!**
+**This is open source and I cannot give you any guarantees, though it has worked for me in many projects. Please, report issues and contribute!**
 
 
 ## Installation
 
-How-to use:
+How-to use (takes around 5 minutes):
 
  * Take a backup of your database
  * Download plugin and activate (you will need Polylang active)
  * Enable Media translations in Polylang Settings
  * Set all content without language to default language from "Languages" admin page
- * Click "Translate and replace" from the admin notice
+ * Click "1. Translate the whole media library" from the admin notice
+ * Click through steps (50 posts at a time). Each step will take some time.
+ * Click "2. Translate existing images in content" from the admin notice
  * Click through steps (50 posts at a time). Each step will take some time.
  * Deactivate and delete plugin when you have gone through all the steps
 
