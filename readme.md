@@ -6,6 +6,8 @@
 
 **License:** GPLv2 or later
 
+![screen shot 2017-01-23 at 17 02 03](https://cloud.githubusercontent.com/assets/9577084/22209080/d93723f6-e18d-11e6-918c-c3cf390f3c70.png)
+
 ## Description
 
 Polylang Translate existing media is an add-on for the multilingual WordPress plugin [Polylang](https://wordpress.org/plugins/polylang/). This add-on let's you bulk translate and replace all existing media in content, featured image and meta fields you enable translations in media. This plugin is based on my other Polylang plugin [polylang-copy-content](https://github.com/aucor/polylang-copy-content).
