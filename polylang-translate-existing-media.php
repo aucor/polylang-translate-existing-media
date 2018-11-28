@@ -1,8 +1,8 @@
 <?php
 /*
 Plugin Name: Polylang Add-on: Translate existing media
-Plugin URI: 
-Version: 0.2.1
+Plugin URI: https://github.com/aucor/polylang-translate-existing-media/
+Version: 0.2.2
 Author: Aucor Oy
 Author URI: https://github.com/aucor
 Description: Translate and replace media in existing posts, pages and cpts
@@ -668,5 +668,9 @@ class PolylangTranslateExistingMedia {
 
 }
 
-add_action('plugins_loaded', create_function('', 'global $polylang_translate_existing_media; $polylang_translate_existing_media = new PolylangTranslateExistingMedia();'));
+add_action('plugins_loaded', function() {
+	global $polylang_translate_existing_media;
+	$polylang_translate_existing_media = new PolylangTranslateExistingMedia();
+});
+
 

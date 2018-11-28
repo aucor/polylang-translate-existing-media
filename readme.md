@@ -90,6 +90,10 @@ add_filter( 'polylang-translate-existing-media-custom-fields-with-image-id', 'pr
 
 ## Changelog
 
+### 0.2.2
+
+ * PHP 7.2. compatibility
+
 ### 0.2
 
  * New Feature: Translate whole media library
